@@ -1,16 +1,28 @@
 import scrapy
+import re
 
-
-class ImdbspiderSpider(scrapy.Spider):
+class Imdbspider(scrapy.Spider):
     name = "IMDbSpider"
     allowed_domains = ["www.imdb.com"]
-    start_urls = ["https://www.imdb.com/title/tt0068646/reviews"]
+    start_urls = ["https://www.imdb.com/title/tt0903747/reviews"]
+
+    def __init__(self):
+        self.target_name = None
+        self.target_type = None
 
     def parse(self, response):
+
+        if self.target_name is None or self.target_type is None:
+            self.target_name = response.css('a.subnav_heading::text').get()
+            self.target_type = response.css('div.subnav > span.nobr::text').get().strip()
+
         for review in response.css('div.lister-item-content'):
             yield {
-                'user_name': review.css('span.display-name-link > a::text').get(),
-                'rating': review.css('span.rating-other-user-rating > span:nth-of-type(1)::text').get(),
+                'name': self.target_name, 
+                'type': self.target_type, 
+                'user_name': review.css('span.display-name-link > a::text').get(), 
+                'rating': review.css('span.rating-other-user-rating > span:nth-of-type(1)::text').get(), 
+                'review_date': review.css('span.review-date::text').get(), 
                 'reviews': review.css('div.show-more__control::text').get()
             }
         
